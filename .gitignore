@@ -1,5 +1,11 @@
-# Compiled class file
-*.class
+# Compiled file
+build/
+
+# Gradle cache
+.gradle/
+
+# Intellij
+.idea
 
 # Log file
 *.log
