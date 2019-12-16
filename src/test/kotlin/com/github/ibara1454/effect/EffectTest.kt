@@ -47,16 +47,22 @@ class EffectTest {
     }
 
     /**
+     *
+     */
+    @Test
+    fun testEffect() {
+
+    }
+
+    /**
      * This test case shows the usage [effect] function.
      */
     @Test
     fun testLogExample1() {
         // Write a `log` function to print the result of any given function
-        fun <T> log(f: () -> T): T {
-            return effect({ x -> print("$x") }, f)
-        }
+        val withLog = buildEffect<Int>(::print)
         // The simple `add` function (with log of the result)
-        fun add(x: Int, y: Int): Int = log {
+        fun add(x: Int, y: Int): Int = withLog {
             x + y
         }
         // Assert the result of add function

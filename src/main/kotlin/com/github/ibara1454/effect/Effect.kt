@@ -36,7 +36,7 @@ package com.github.ibara1454.effect
 inline fun <T> effect(action: (T) -> Unit, f: () -> T): T {
     // The identity function
     val id: (T) -> T = { x -> x }
-    // Delegate to the overload function
+    // Delegate to the 3-arity overload function
     return effect(id, action, f)
 }
 
@@ -55,3 +55,11 @@ inline fun <T, R> effect(transformer: (T) -> R, action: (R) -> Unit, f: () -> T)
     action(transformer(result))
     return result
 }
+
+/**
+ * TBD.
+ * @param action TBD.
+ * @return higher-order function
+ */
+inline fun <T> buildEffect(crossinline action: (T) -> Unit): (() -> T) -> T =
+    { f -> effect(action, f) }
