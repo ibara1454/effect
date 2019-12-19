@@ -24,68 +24,216 @@
 
 package com.github.ibara1454.effect
 
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import kotlin.test.*
 
 class EffectTest {
-    private val outputBuffer = ByteArrayOutputStream()
-    private lateinit var originOut: PrintStream
-
-    @BeforeTest
-    fun setUp() {
-        // Mocks the standard output
-        originOut = System.out
-        System.setOut(
-            PrintStream(outputBuffer, true, Charsets.UTF_8.displayName())
-        )
-    }
-
-    @AfterTest
-    fun tearDown() {
-        System.setOut(originOut)
-    }
 
     /**
-     *
+     * Test for using [effect] on function which executed successfully.
      */
     @Test
-    fun testEffect() {
-
-    }
-
-    /**
-     * This test case shows the usage [effect] function.
-     */
-    @Test
-    fun testLogExample1() {
+    fun testEffectWhenSucceed() {
+        val logContainer: MutableList<Int> = mutableListOf()
         // Write a `log` function to print the result of any given function
-        val withLog = buildEffect<Int>(::print)
+        val appendLog: (Int) -> Unit = { logContainer.add(it) }
         // The simple `add` function (with log of the result)
-        fun add(x: Int, y: Int): Int = withLog {
-            x + y
-        }
+        fun add(x: Int, y: Int) = effect(appendLog) { x + y }
         // Assert the result of add function
         val result = add(1, 2)
         assertEquals(expected = 3, actual = result)
         // Assert the log
-        val output = outputBuffer.toByteArray().toString(Charsets.UTF_8)
-        assertEquals(expected = "3", actual = output)
+        assertEquals(expected = listOf(3), actual = logContainer)
     }
 
     /**
-     * Another usage of [effect] function.
+     * Test for using [effect] on function which throws errors.
      */
     @Test
-    fun testLogExample2() {
-        // Use `effect` function directly
-        val result = effect(::print) {
-            1 + 2
+    fun testEffectWhenFailed() {
+        val logContainer: MutableList<Int> = mutableListOf()
+        // Write a `log` function to print the result of any given function
+        val appendLog: (Int) -> Unit = { logContainer.add(it) }
+        // The simple `add` function (with log of the result)
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = effect(appendLog) {
+            error("Throw exception anyway")
         }
         // Assert the result of add function
+        assertFailsWith<IllegalStateException> { add(1, 2) }
+        // Assert the log
+        assertEquals(expected = emptyList<Int>(), actual = logContainer)
+    }
+
+    /**
+     * Test for using [effectOnError] on function which executed successfully.
+     */
+    @Test
+    fun testEffectOnErrorWhenSucceed() {
+        val logContainer: MutableList<String> = mutableListOf()
+        // Write a `log` function to print the result of any given function
+        val appendLog: (Throwable) -> Unit = { e -> e.message?.also { logContainer.add(it) } }
+        // The simple `add` function (with log of the result)
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = effectOnError(appendLog) { x + y }
+        // Assert the result of add function
+        val result = add(1, 2)
         assertEquals(expected = 3, actual = result)
         // Assert the log
-        val output = outputBuffer.toByteArray().toString(Charsets.UTF_8)
-        assertEquals(expected = "3", actual = output)
+        assertEquals(expected = emptyList<String>(), actual = logContainer)
     }
+
+    /**
+     * Test for using [effectOnError] on function which throws errors.
+     */
+    @Test
+    fun testEffectOnErrorWhenFailed() {
+        val logContainer: MutableList<String> = mutableListOf()
+        // Write a `log` function to print the result of any given function
+        val appendLog: (Throwable) -> Unit = { e -> e.message?.also { logContainer.add(it) } }
+        // The simple `add` function (with log of the result)
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = effectOnError(appendLog) {
+            error("Throw exception anyway")
+        }
+        // Assert the result of add function
+        assertFailsWith<IllegalStateException> { add(1, 2) }
+        // Assert the log
+        assertEquals(expected = listOf("Throw exception anyway"), actual = logContainer)
+    }
+
+    /**
+     * Test for using [effectOnResult] on function which executed successfully.
+     */
+    @Test
+    fun testEffectOnResultWhenSucceed() {
+        val logContainer: MutableList<Int> = mutableListOf()
+        // Write a `log` function to print the result of any given function
+        val appendLog: (Result<Int>) -> Unit = { result -> result.onSuccess { logContainer.add(it) } }
+        // The simple `add` function (with log of the result)
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = effectOnResult(appendLog) { x + y }
+        // Assert the result of add function
+        val result = add(1, 2)
+        assertEquals(expected = 3, actual = result)
+        // Assert the log
+        assertEquals(expected = listOf(3), actual = logContainer)
+    }
+
+    /**
+     * Test for using [effectOnResult] on function which throws errors.
+     */
+    @Test
+    fun testEffectOnResultWhenFailed() {
+        val logContainer: MutableList<String> = mutableListOf()
+        // Write a `log` function to print the result of any given function
+        val appendLog: (Result<Int>) -> Unit = { result -> result.onFailure { e -> e.message?.also { logContainer.add(it) } } }
+        // The simple `add` function (with log of the result)
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = effectOnResult(appendLog) {
+            error("Throw exception anyway")
+        }
+        // Assert the result of add function
+        assertFailsWith<IllegalStateException> { add(1, 2) }
+        // Assert the log
+        assertEquals(expected = listOf("Throw exception anyway"), actual = logContainer)
+    }
+
+    /**
+     * Test for using [buildEffect] on function which executed successfully.
+     */
+    @Test
+    fun testBuildEffectWhenSucceed() {
+        val logContainer: MutableList<Int> = mutableListOf()
+        val appendLog = buildEffect { x: Int -> logContainer.add(x) }
+        fun add(x: Int, y: Int): Int = appendLog { x + y }
+        // Assert the result of add function
+        val result = add(1, 2)
+        assertEquals(expected = 3, actual = result)
+        // Assert the log
+        assertEquals(expected = listOf(3), actual = logContainer)
+    }
+
+    /**
+     * Test for using [buildEffect] on function which throws errors.
+     */
+    @Test
+    fun testBuildEffectWhenFailed() {
+        val logContainer: MutableList<Int> = mutableListOf()
+        val appendLog = buildEffect { x: Int -> logContainer.add(x) }
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = appendLog {
+            error("Throw exception anyway")
+        }
+        // Assert the result of add function
+        assertFailsWith<IllegalStateException> { add(1, 2) }
+        // Assert the log
+        assertEquals(expected = emptyList<Int>(), actual = logContainer)
+    }
+
+    /**
+     * Test for using [buildEffectOnError] on function which executed successfully.
+     */
+    @Test
+    fun testBuildEffectOnErrorWhenSucceed() {
+        val logContainer: MutableList<String> = mutableListOf()
+        val appendLog = buildEffectOnError<Int> { e -> e.message?.also { logContainer.add(it) } }
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = appendLog { x + y }
+        // Assert the result of add function
+        val result = add(1, 2)
+        assertEquals(expected = 3, actual = result)
+        // Assert the log
+        assertEquals(expected = emptyList<String>(), actual = logContainer)
+    }
+
+    /**
+     * Test for using [buildEffectOnError] on function which throws errors.
+     */
+    @Test
+    fun testBuildEffectOnErrorWhenFailed() {
+        val logContainer: MutableList<String> = mutableListOf()
+        val appendLog = buildEffectOnError<Int> { e -> e.message?.also { logContainer.add(it) } }
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = appendLog {
+            error("Throw exception anyway")
+        }
+        // Assert the result of add function
+        assertFailsWith<IllegalStateException> { add(1, 2) }
+        // Assert the log
+        assertEquals(expected = listOf("Throw exception anyway"), actual = logContainer)
+    }
+
+    /**
+     * Test for using [buildEffectOnResult] on function which executed successfully.
+     */
+    @Test
+    fun testBuildEffectOnResultWhenSucceed() {
+        val logContainer: MutableList<Int> = mutableListOf()
+        val appendLog = buildEffectOnResult<Int> { result -> result.onSuccess { logContainer.add(it) } }
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = appendLog { x + y }
+        // Assert the result of add function
+        val result = add(1, 2)
+        assertEquals(expected = 3, actual = result)
+        // Assert the log
+        assertEquals(expected = listOf(3), actual = logContainer)
+    }
+
+    /**
+     * Test for using [buildEffectOnResult] on function which throws errors.
+     */
+    @Test
+    fun testBuildEffectOnResultWhenFailed() {
+        val logContainer: MutableList<String> = mutableListOf()
+        val appendLog = buildEffectOnResult<Int> { result -> result.onFailure { e -> e.message?.also { logContainer.add(it) } } }
+        @Suppress("UNUSED_PARAMETER")
+        fun add(x: Int, y: Int): Int = appendLog {
+            error("Throw exception anyway")
+        }
+        // Assert the result of add function
+        assertFailsWith<IllegalStateException> { add(1, 2) }
+        // Assert the log
+        assertEquals(expected = listOf("Throw exception anyway"), actual = logContainer)
+    }
+
 }

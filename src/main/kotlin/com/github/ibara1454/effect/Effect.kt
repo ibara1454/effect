@@ -29,32 +29,30 @@ package com.github.ibara1454.effect
  *
  * In general, [action] should not contain any business logic and should not throw exceptions.
  *
- * @param action any side-effect, e.g. make logs
+ * @param action any side-effect, e.g. loggers and builders
  * @param f the function you actually want to call
  * @return which is same to the result of [f]
  */
-inline fun <T> effect(action: (T) -> Unit, f: () -> T): T {
-    // The identity function
-    val id: (T) -> T = { x -> x }
-    // Delegate to the 3-arity overload function
-    return effect(id, action, f)
-}
+inline fun <T> effect(action: (T) -> Unit, f: () -> T): T =
+    runCatching(f).onSuccess(action).getOrThrow()
 
 /**
- * [effect] allows you to make side-effects [action] with the result of given function [f].
- *
- * In general, [action] should not contain any business logic and should not throw exceptions.
- *
- * @param transformer transforms the result of [f] and pass it to [action]
- * @param action any side-effect, e.g. make logs
- * @param f the function you actually want to call
- * @return which is same to the result of [f]
+ * TBD.
+ * @param action TBD
+ * @param f TBD
+ * @return TBD
  */
-inline fun <T, R> effect(transformer: (T) -> R, action: (R) -> Unit, f: () -> T): T {
-    val result = f()
-    action(transformer(result))
-    return result
-}
+inline fun <T> effectOnError(action: (Throwable) -> Unit, f: () -> T): T =
+    runCatching(f).onFailure(action).getOrThrow()
+
+/**
+ * TBD.
+ * @param action TBD
+ * @param f TBD
+ * @return TBD
+ */
+inline fun <T> effectOnResult(action: (Result<T>) -> Unit, f: () -> T): T =
+    runCatching(f).also(action).getOrThrow()
 
 /**
  * TBD.
@@ -63,3 +61,19 @@ inline fun <T, R> effect(transformer: (T) -> R, action: (R) -> Unit, f: () -> T)
  */
 inline fun <T> buildEffect(crossinline action: (T) -> Unit): (() -> T) -> T =
     { f -> effect(action, f) }
+
+/**
+ * TBD.
+ * @param action TBD
+ * @return TBD
+ */
+inline fun <T> buildEffectOnError(crossinline action: (Throwable) -> Unit): (() -> T) -> T =
+    { f -> effectOnError(action, f) }
+
+/**
+ * TBD.
+ * @param action TBD
+ * @return TBD
+ */
+inline fun <T> buildEffectOnResult(crossinline action: (Result<T>) -> Unit): (() -> T) -> T =
+    { f -> effectOnResult(action, f) }
