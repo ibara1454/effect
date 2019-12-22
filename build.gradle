@@ -11,7 +11,7 @@ repositories {
 }
 
 group = "com.github.ibara1454.effect"
-version = "0.0.1"
+version = "0.0.0"
 
 dependencies {
     // Align versions of all Kotlin components
@@ -28,32 +28,27 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
-task sourceJar(type : Jar) {
-    from sourceSets.main.allJava
-}
-
 publishing {
     repositories {
         maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/ibara1454/effect")
+            name = "bintray-ibara1454-maven"
+            url = uri("https://api.bintray.com/maven/ibara1454/maven/com.github.ibara1454.effect/;publish=1")
             credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.token") ?: System.getenv("PASSWORD")
+                username = project.findProperty("bintray.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("bintray.api_key") ?: System.getenv("PASSWORD")
             }
         }
-//        maven {
-//            url = uri("$buildDir/repository")
-//        }
+        maven {
+            url = uri("$buildDir/repository")
+        }
     }
     publications {
         maven(MavenPublication) {
-//            groupId = 'org.gradle.sample'
-//            artifactId = 'project1-sample'
-//            version = '0.0.0'
+            groupId = project.group
+            artifactId = project.name
+            version = project.version
 
             from components.java
-//            artifact sourceJar
         }
     }
 }
