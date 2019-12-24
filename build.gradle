@@ -29,9 +29,14 @@ dependencies {
 }
 
 publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
     repositories {
         maven {
-            name = "bintray-ibara1454-maven"
+            name = "Bintray"
             url = uri("https://api.bintray.com/maven/ibara1454/maven/com.github.ibara1454.effect/;publish=1")
             credentials {
                 username = project.findProperty("bintray.user") ?: System.getenv("USERNAME")
@@ -39,16 +44,7 @@ publishing {
             }
         }
         maven {
-            url = uri("$buildDir/repository")
-        }
-    }
-    publications {
-        maven(MavenPublication) {
-            groupId = project.group
-            artifactId = project.name
-            version = project.version
-
-            from components.java
+            url "$buildDir/repository"
         }
     }
 }
