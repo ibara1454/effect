@@ -20,5 +20,5 @@ jobs:
     - name: Publish build
       run: ./gradlew publish
       env:
-        USERNAME: ${{ BINTRAY_USER }}
-        PASSWORD: ${{ BINTRAY_API_KEY }}
+        USERNAME: ${{ secrets.BINTRAY_USER }}
+        PASSWORD: ${{ secrets.BINTRAY_API_KEY }}
