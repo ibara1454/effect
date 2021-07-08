@@ -1,0 +1,50 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.3.61"
+    id "java-library"
+    id "maven-publish"
+}
+
+repositories {
+    // Use jcenter for resolving dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
+}
+
+group = "com.github.ibara1454.effect"
+version = "0.0.0"
+
+dependencies {
+    // Align versions of all Kotlin components
+    def kotlin_version = '1.3.61'
+//    implementation platform("org.jetbrains.kotlin:kotlin-bom:$kotlin_version")
+
+    // Use the Kotlin standard library.
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
+
+    // Use the Kotlin test library.
+    testImplementation("org.jetbrains.kotlin:kotlin-test")
+
+    // Use the Kotlin JUnit integration.
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = "Bintray"
+            url = uri("https://api.bintray.com/maven/ibara1454/maven/com.github.ibara1454.effect/;publish=1")
+            credentials {
+                username = project.findProperty("bintray.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("bintray.api_key") ?: System.getenv("PASSWORD")
+            }
+        }
+        maven {
+            url "$buildDir/repository"
+        }
+    }
+}
